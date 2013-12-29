@@ -108,6 +108,12 @@ def parse_filename(filename):
             episode = episode * 100
             episode = episode + int(match.group(3))
         show = filename[0:match.start()]
+
+        # quick fix for episode number at the start of file name
+        showMatch = re.compile(r'([0-9]+)[\._ \-]([^\\/]*)').search(show)
+        if showMatch and episode == int(showMatch.group(1)):
+            show = showMatch.group(2)
+
         show = clean_show_name(show)
         return (show, season, episode, filename)
 
