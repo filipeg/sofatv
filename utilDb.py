@@ -77,12 +77,20 @@ class UtilDb():
             c.execute("UPDATE shows SET cover = \"" + sid +
                 "\", hasCover=1 WHERE show = \"" + showname + "\"")
 
-    def cleanMissingEpisodes(self):
+    def cleanMissingEpisodes(self, ui):
         c = self.getC()
         missingFiles = []
         future = datetime.datetime.now() + datetime.timedelta(days=5)
         deadline = int(time.mktime(future.timetuple()))
         now = int(time.mktime(datetime.datetime.now().timetuple()))
+
+        # Removes shows that are both unmonitored and have no episodes in
+        # the database
+        for show in c.execute("SELECT * FROM shows WHERE monitored == 0 " +
+                                "AND show NOT IN (SELECT show FROM episodes)"):
+            self.cleanShow(show['show'])
+            ui.addLog("Removing the show '" + show['show'] +
+                "' from the database")
 
         for row in c.execute("SELECT * FROM episodes WHERE file <> \"\" " +
                                 "AND viewed < 2"):
@@ -91,8 +99,11 @@ class UtilDb():
                 missingFiles.append(row[4])
 
         # record the deadline for the missing files
-        c.execute("UPDATE episodes SET viewed = " + str(deadline) +
-        " WHERE file IN (\"" + "\", \"".join(missingFiles) + "\")")
+        if missingFiles:
+            c.execute("UPDATE episodes SET viewed = " + str(deadline) +
+                " WHERE file IN (\"" + "\", \"".join(missingFiles) + "\")")
+            ui.addLog("The following episodes are missing: " +
+                "\n".join(missingFiles))
 
         # delete every record with a missing file OR past the deadline
         c.execute("DELETE FROM episodes WHERE file = \"\" OR " +
@@ -111,7 +122,6 @@ class UtilDb():
             c.execute("DELETE FROM shows WHERE show =\"" +
             showName + "\" AND fetching = 0")
             self.commit()
-        self.closeConn()
 
     def showInList(self, c, showName):
         for row in c.execute("SELECT * FROM shows WHERE show =\"" +

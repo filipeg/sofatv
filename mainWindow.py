@@ -32,7 +32,7 @@ class MainWindow:
         elif (data == "btnSweepSubDir"):
             rssParser.sweepDir(self, 2)
         elif (data == "btnClean"):
-            UtilDb().cleanMissingEpisodes()
+            UtilDb().cleanMissingEpisodes(self)
             self.clearEpisodes()
             UtilDb().loadDB(self)
         elif (data == "hide_unmonitored_shows"):
@@ -78,7 +78,7 @@ class MainWindow:
     def callbackShowRemove(self, widget, data=None):
         print "Remove show %s was clicked" % data[0]
         # removes show if no episodes exist
-        UtilDb().cleanShow(data[0])
+        #UtilDb().cleanShow(data[0])
 
     def callbackPlay(self, widget, filepath=None):
         if sys.platform.startswith('darwin'):
