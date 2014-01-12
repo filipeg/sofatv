@@ -1,5 +1,6 @@
 # -*- coding: utf-8 *-*
 import os
+import re
 import sys
 import subprocess
 import glob
@@ -99,11 +100,63 @@ def sweepSubDir(ui, db, path, levels):
         except sqlite3.IntegrityError:
             pass
     db.commit()
+    episode_count = len(episodes)
 
     # Enters sub-directories
+    subdirs = []
     if (levels > 0):
         for subdir in os.walk('.').next()[1]:
-            sweepSubDir(ui, db, path + subdir + "/", levels - 1)
+            subdirs.append(subdir)
+            episode_count += sweepSubDir(ui, db, path + subdir + "/", levels - 1)
+
+    if not episode_count and subdirs:
+        for subdir in subdirs:
+            if not (subdir.startswith("Season ") or
+                subdir.startswith("season ")):
+                return episode_count
+        # Seems we have a show directory with Season subdirectories
+        print path + ": " + str(episode_count)
+        show_name = os.path.basename(os.path.normpath(path))
+        for subdir in subdirs:
+            sweepSeasonSubDir(ui, db, path + subdir + "/", show_name, subdir)
+
+    return episode_count
+
+
+def sweepSeasonSubDir(ui, db, path, showname, dirname):
+    types = ('*.avi', '*.mkv', '*.mp4')  # the tuple of file types
+    files_grabbed = []
+    episodes = []
+
+    season = 0
+    seasonMatch = re.compile(r'[Ss][a-s]* ([0-9]+)').search(dirname)
+    if seasonMatch:
+        season = int(seasonMatch.group(1))
+    else:
+        # Invalid directory name
+        return
+
+    os.chdir(path)
+
+    for files in types:
+        files_grabbed.extend(glob.glob(files))
+    for file in files_grabbed:
+        try:
+            episode = episodeparser.parse_filename_episode(file, showname, season)
+            db.insertFoundEpisode(episode, path + file)
+            episodes.append(episode)
+            try:
+                db.insertFoundShow(episode[0])
+            except sqlite3.IntegrityError:
+                pass
+        except NameError:
+            pass
+        except sqlite3.IntegrityError:
+            pass
+    db.commit()
+    episode_count = len(episodes)
+
+    return episode_count
 
 
 class LoadRssThread(threading.Thread):

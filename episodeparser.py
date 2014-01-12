@@ -117,6 +117,25 @@ def parse_filename(filename):
         show = clean_show_name(show)
         return (show, season, episode, filename)
 
+def parse_filename_episode(filename, show, season):
+    """This returns the show, season, and episode number for a single file,
+        provided the show name and season
+
+    >>> parse_filename('The Wire', 1, "01 The Target.avi")
+    ('the wire', 1, 1)
+
+    """
+    episode = 0
+    # episode number at the start of file name
+    episodeMatch = re.compile(r'([0-9]+)[\._ \-]([^\\/]*)').search(filename)
+    if episodeMatch:
+        episode = int(episodeMatch.group(1))
+    else:
+        raise NameError, "Cannot parse %s" % filename
+
+    show = clean_show_name(show)
+    return (show, season, episode, filename)
+
 if __name__ == "__main__":
     import doctest
     doctest.testmod()
