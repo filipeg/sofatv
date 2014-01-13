@@ -1,15 +1,14 @@
 # -*- coding: utf-8 *-*
 import os
 import re
-import sys
 import subprocess
 import glob
-from configobj import ConfigObj
 import threading
 import feedparser
 import episodeparser
 from utilDb import UtilDb
 import sqlite3
+
 
 def getDefConf():
     default_configuration = os.path.expanduser("~/.config/sofaTV/")
@@ -17,9 +16,10 @@ def getDefConf():
         os.makedirs(default_configuration)
     default_configuration += "conf.conf"
     if not (os.path.isfile(default_configuration)):
-        file = open(default_configuration, 'w+')
-        file.close()
+        cfg_file = open(default_configuration, 'w+')
+        cfg_file.close()
     return default_configuration
+
 
 def main(ui):
     """Parses command line arguments
@@ -33,7 +33,6 @@ def main(ui):
 
     db = UtilDb()
     db.prepareDB()
-    c = db.getC()
 
     path = os.path.expanduser("~/Downloads/")
     types = ('*.avi', '*.mkv', '*.mp4') # the tuple of file types
@@ -69,7 +68,6 @@ def main(ui):
 def sweepDir(ui, levels):
     db = UtilDb()
     db.prepareDB()
-    c = db.getC()
     path = os.path.expanduser("~/Downloads/")
     sweepSubDir(ui, db, path, levels)
 
@@ -115,7 +113,6 @@ def sweepSubDir(ui, db, path, levels):
                 subdir.startswith("season ")):
                 return episode_count
         # Seems we have a show directory with Season subdirectories
-        print path + ": " + str(episode_count)
         show_name = os.path.basename(os.path.normpath(path))
         for subdir in subdirs:
             sweepSeasonSubDir(ui, db, path + subdir + "/", show_name, subdir)
@@ -177,9 +174,7 @@ def loadRSS(ui):
 
 # Loads RSS feeds, should run in a seperate thread
 def loadRSSThread(ui):
-
     db = UtilDb()
-    c = db.getC()
 
     #episodes.append(("leverage",1,1))
     eztv_rss_url = "http://rss.bt-chat.com/?group=3&cat=9"
@@ -209,7 +204,7 @@ def loadRSSFeed(db, feedUrl, ui):
                 if (db.shouldDownload(c, episode[0], episode[1], episode[2])):
                     command = "transmission-gtk \"" + item["magneturi"]
                     command = command + "&tr=" + item["tracker"] + "\""
-                    print command
+                    #print command
                     command = item["magneturi"] + "&tr=" + item["tracker"]
                     #os.system(command)
                     subprocess.Popen(['transmission-gtk', command])
@@ -217,12 +212,8 @@ def loadRSSFeed(db, feedUrl, ui):
                     ui.addLog("Downloading " + episode[0] + "S" +
                         str(episode[1]) + "E" + str(episode[2]))
                 else:
-                    #print "Já temos " + str(episode)
-                    ui.addLog("Já temos " + episode[0] + "S" +
+                    ui.addLog("Already have " + episode[0] + "S" +
                         str(episode[1]) + "E" + str(episode[2]))
-            #else:
-            #    print "Não interessa: " + str(episode)
-                #os.system(command)
         except NameError:
             pass
     if loaded:
