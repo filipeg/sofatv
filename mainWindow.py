@@ -12,7 +12,6 @@ import rssParser
 from utilDb import UtilDb
 import utilWeb
 
-
 class MainWindow:
 
     episodes = []
@@ -251,8 +250,12 @@ class MainWindow:
             box.hide()
         for box in self.shows:
             box.hide()
+        for box in self.showCovers:
+            self.coversBox.remove(box)
         self.episodes = []
         self.shows = []
+        self.showCovers = []
+        self.tX = self.tY = 0
 
     # show button right click callback: displays context menu
     def cb_showButtonRClick(self, widget, event):
@@ -328,7 +331,7 @@ class MainWindow:
             False) # ignore child's aspect
 
         aspect_frame.show()
-        self.showCovers.append(image)
+        self.showCovers.append(aspect_frame)
         self.coversBox.attach(aspect_frame, self.tX, self.tX+1, self.tY,self.tY+1)
 
         aspect_frame.add(image)
