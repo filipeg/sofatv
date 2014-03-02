@@ -193,3 +193,11 @@ class UtilDb():
         for row in c.execute("""SELECT show, monitored, fetching, cover,
         hasCover FROM shows ORDER BY show"""):
             ui.addShow(row)
+
+    def getContentPath(self):
+        c = self.getC()
+        path = "~/Downloads" # default content path
+        for row in c.execute("SELECT * FROM config WHERE key = \"content_path\""):
+            path = str(row[1]) + "/"
+        self.closeConn()
+        return path

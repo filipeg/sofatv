@@ -34,7 +34,7 @@ def main(ui):
     db = UtilDb()
     db.prepareDB()
 
-    path = os.path.expanduser("~/Downloads/")
+    path = os.path.expanduser(db.getContentPath())
     types = ('*.avi', '*.mkv', '*.mp4') # the tuple of file types
     files_grabbed = []
     episodes = []
@@ -68,7 +68,7 @@ def main(ui):
 def sweepDir(ui, levels):
     db = UtilDb()
     db.prepareDB()
-    path = os.path.expanduser("~/Downloads/")
+    path = os.path.expanduser(db.getContentPath())
     sweepSubDir(ui, db, path, levels)
 
     db.loadDB(ui)
@@ -85,6 +85,7 @@ def sweepSubDir(ui, db, path, levels):
     for files in types:
         files_grabbed.extend(glob.glob(files))
     for file in files_grabbed:
+        print file
         try:
             episode = episodeparser.parse_filename(file)
             db.insertFoundEpisode(episode, path + file)

@@ -50,6 +50,13 @@ class MainWindow:
             self.setConfs(UtilDb().getConfs())
             UtilDb().loadDB(self)
 
+    def callbackEntry(self, widget, event, data):
+        keyname = gtk.gdk.keyval_name(event.keyval)
+        if (data == "content_path"
+            and event.type == gtk.gdk.KEY_PRESS and keyname == "Return"):
+            UtilDb().setConf(data, widget.get_text())
+            self.setConfs(UtilDb().getConfs())
+
     def callbackEpisode(self, widget, data=None):
         print "%s was toggled %s" % (data, ("OFF", "ON")[widget.get_active()])
         UtilDb().setViewed(data, ("0", "1")[widget.get_active()])
@@ -379,6 +386,14 @@ class MainWindow:
         self.btn_hide_viewed.set_active(self.isConf("hide_viewed", "ON"))
         self.btn_hide_viewed.connect("toggled", self.callbackBtn, "hide_viewed")
 
+        self.txt_content_path = gtk.Entry()
+        self.configBox.attach(self.txt_content_path, 0, 1, 3, 4)
+        self.txt_content_path.show()
+        if self.getConf("content_path"):
+            self.txt_content_path.set_text(self.getConf("content_path"))
+        self.txt_content_path.connect("key-press-event", self.callbackEntry, "content_path")
+        self.txt_content_path.set_tooltip_text("Content path")
+
         sw = gtk.ScrolledWindow()
         sw.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
         self.txt_log = gtk.TextView()
@@ -386,7 +401,7 @@ class MainWindow:
         self.txt_log.set_cursor_visible(False)
         sw.add(self.txt_log)
         sw.show()
-        self.configBox.attach(sw, 0, 1, 3, 5)
+        self.configBox.attach(sw, 0, 1, 4, 6)
         self.txt_log.show()
 
         self.configFrame.add(self.configBox)
@@ -396,6 +411,12 @@ class MainWindow:
 
     def setConfs(self, confs):
         self.confs = confs
+
+    def getConf(self, key):
+        for conf in self.confs:
+            if (conf[0] == key):
+                return conf[1]
+        return None
 
     def isConf(self, key, expectedValue):
         for conf in self.confs:
