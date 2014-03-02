@@ -22,7 +22,7 @@ class UtilDb():
 
     def getC(self):
         if not self.c:
-            self.conn = sqlite3.connect(rssParser.getDefConf())
+            self.conn = sqlite3.connect(rssParser.getDefConf(), timeout=10)
             # Enable access to row elements by name or by index.
             self.conn.row_factory = sqlite3.Row
             self.c = self.conn.cursor()
@@ -33,7 +33,7 @@ class UtilDb():
 
     def closeConn(self):
         self.conn.close()
-        c = None
+        self.c = None
 
     def prepareDB(self):
         # Create table

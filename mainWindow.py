@@ -320,10 +320,13 @@ class MainWindow:
             return
         image = gtk.Image()
         #image.set_from_file(show[2])
-        pixbuf = gtk.gdk.pixbuf_new_from_file(show['cover'])
-        scaled_buf = pixbuf.scale_simple(100,100,gtk.gdk.INTERP_BILINEAR)
-        image.set_from_pixbuf(scaled_buf)
-        image.show()
+        try:
+            pixbuf = gtk.gdk.pixbuf_new_from_file(show['cover'])
+            scaled_buf = pixbuf.scale_simple(100,100,gtk.gdk.INTERP_BILINEAR)
+            image.set_from_pixbuf(scaled_buf)
+            image.show()
+        except Exception:
+            pass
         aspect_frame = gtk.AspectFrame(show['show'], # label
             0.5, # center x
             0.5, # center y
