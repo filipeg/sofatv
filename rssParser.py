@@ -60,7 +60,8 @@ def main(ui):
         except sqlite3.IntegrityError:
             pass
     #cfg.write()
-    db.commit()
+    if len(files_grabbed) > 0:
+         db.commit()
     db.loadDB(ui)
     db.closeConn()
 
