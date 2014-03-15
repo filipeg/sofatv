@@ -1,9 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 *-*
 
-import pygtk
-pygtk.require('2.0')
-import gtk
+import wx
 import sys
 import subprocess
 import os
@@ -12,7 +10,7 @@ import rssParser
 from utilDb import UtilDb
 import utilWeb
 
-class MainWindow:
+class MainWindow(wx.Frame):
 
     episodes = []
     shows = []
@@ -36,34 +34,39 @@ class MainWindow:
             UtilDb().loadDB(self)
         elif (data == "hide_unmonitored_shows"):
             UtilDb().setConf("hide_unmonitored_shows",
-                ("OFF", "ON")[widget.get_active()])
+                ("OFF", "ON")[widget.GetValue()])
             self.setConfs(UtilDb().getConfs())
             UtilDb().loadDB(self)
         elif (data == "hide_unmonitored"):
             UtilDb().setConf("hide_unmonitored",
-                ("OFF", "ON")[widget.get_active()])
+                ("OFF", "ON")[widget.GetValue()])
             self.setConfs(UtilDb().getConfs())
             UtilDb().loadDB(self)
         elif (data == "hide_viewed"):
             UtilDb().setConf("hide_viewed",
-                ("OFF", "ON")[widget.get_active()])
+                ("OFF", "ON")[widget.GetValue()])
             self.setConfs(UtilDb().getConfs())
             UtilDb().loadDB(self)
 
     def callbackEntry(self, widget, event, data):
-        keyname = gtk.gdk.keyval_name(event.keyval)
+        #keyname = gtk.gdk.keyval_name(event.keyval)
+        keycode = event.GetKeyCode()
         if (data == "content_path"
-            and event.type == gtk.gdk.KEY_PRESS and keyname == "Return"):
-            UtilDb().setConf(data, widget.get_text())
+            and keycode == 306):#wx.WXK_RETURN):
+            UtilDb().setConf(data, widget.GetValue())
             self.setConfs(UtilDb().getConfs())
+            self.addLog("* Content path updated")
+        else:
+           event.Skip() 
 
     def callbackEpisode(self, widget, data=None):
-        print "%s was toggled %s" % (data, ("OFF", "ON")[widget.get_active()])
-        UtilDb().setViewed(data, ("0", "1")[widget.get_active()])
+        widget.SetValue((True, False)[widget.GetValue()])
+        print "%s was toggled %s" % (data, ("OFF", "ON")[widget.GetValue()])
+        UtilDb().setViewed(data, ("0", "1")[widget.GetValue()])
 
     def callbackEpisodeInfo(self, widget, data=None):
         launchThread = False
-        if widget.get_has_tooltip():
+        if widget.GetToolTip() is not None:
             return
         self.curShowInfoLock.acquire()
         if self.curShowInfo == "":
@@ -75,11 +78,11 @@ class MainWindow:
             utilWeb.ShowInfoThread(self)
 
     def callbackShow(self, widget, data=None):
-        print "%s was toggled %s" % (data, ("OFF", "ON")[widget.get_active()])
-        if widget.get_label() == "Fetching":
-            UtilDb().setFetching(data, ("0", "1")[widget.get_active()])
+        print "%s was toggled %s" % (data, ("OFF", "ON")[widget.GetValue()])
+        if widget.GetLabelText() == "Fetching":
+            UtilDb().setFetching(data, ("0", "1")[widget.GetValue()])
         else:
-            UtilDb().setMonitored(data, ("0", "1")[widget.get_active()])
+            UtilDb().setMonitored(data, ("0", "1")[widget.GetValue()])
 
     def callbackShowRemove(self, widget, data=None):
         print "Remove show %s was clicked" % data[0]
@@ -112,43 +115,82 @@ class MainWindow:
         gtk.main_quit()
         return False
 
-    def __init__(self):
+    def __init__(self, parent):
         # Allow threads
-        gtk.threads_init()
+        #gtk.threads_init()
+        wx.Frame.__init__(self, parent, -1, "SofaTV",
+                          pos=(50, 50), size=(700, 600))
         self.curShowInfo = ""
         self.curShowInfoLock = threading.Lock()
 
-        # Create a new window
-        self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
-
-        # This is a new call, which just sets the title of our
-        # new window to "Hello Buttons!"
-        self.window.set_title("SofaTV")
-        self.window.set_size_request(700, 600)
-
         # Here we just set a handler for delete_event that immediately
         # exits GTK.
-        self.window.connect("delete_event", self.delete_event)
+        #self.window.connect("delete_event", self.delete_event)
 
         # Sets the border width of the window.
-        self.window.set_border_width(10)
+        #self.window.set_border_width(10)
 
-        self.notebook = gtk.Notebook()
-        self.scrolled_window = gtk.ScrolledWindow()
+        #self.Layout()
+        #self.Show()
+
+        #self.window.add(self.notebook)
+        #frame.add(self.scrolled_window)
+        self.wrapper = wx.Panel(self) #gtk.VBox(False, 0)
+        self.wraSizer = wx.BoxSizer(wx.VERTICAL)#gtk.HBox(False, 0)
+
+        """self.scrolled_window = gtk.ScrolledWindow()
         self.scrolled_window.set_border_width(4)
         self.scrolled_window.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_ALWAYS)
         self.scrolled_window.show()
+        """
 
-        self.wrapper = gtk.VBox(False, 0)
-        self.box = gtk.HBox(False, 0)
-        self.scrolled_window.add_with_viewport(self.wrapper)
+        self.notebook = wx.Notebook(self.wrapper, id=wx.ID_ANY,
+                style= wx.BK_DEFAULT)#gtk.Notebook()
+        self.wraSizer.Add(self.notebook, 1, wx.ALL|wx.EXPAND, 5)
+        self.wrapper.SetSizer(self.wraSizer)
+        #self.scrolled_window.add_with_viewport(self.wrapper)
 
-        frame = gtk.Frame("Main Frame")
-        frame.set_border_width(10)
-        frame.show()
-        label = gtk.Label("Main")
-        self.notebook.append_page(frame, label)
-        self.coversFrame = gtk.Frame("Covers Frame")
+        #self.listPanel = wx.Panel(parent=self.notebook, id=wx.ID_ANY)#, label="Main Frame")#gtk.Frame("Main Frame")
+        self.listPanel = wx.ScrolledWindow(parent=self.notebook, id=wx.ID_ANY)
+        self.listPanel.SetScrollbars(1, 1, 1, 1)
+        #adiciona o box1 agora para ter onde colocar os botoes
+        self.lPSizer = wx.BoxSizer(wx.VERTICAL)
+        self.listPanel.SetSizer(self.lPSizer)
+        self.listPanel.Layout()
+
+        self.boxBtns = wx.BoxSizer(wx.HORIZONTAL)
+        self.btnLoadRss = wx.Button(self.listPanel, -1, "Load RSS")
+        self.btnSweepSubDir = wx.Button(self.listPanel, -1, "Search files (sub-dir)")
+        self.btnClean = wx.Button(self.listPanel, -1, "Clean missing")
+
+        self.btnLoadRss.Bind(wx.EVT_BUTTON,
+                lambda evt: self.callbackBtn(self.callbackBtn, "btnLoadRss"))
+        self.btnSweepSubDir.Bind(wx.EVT_BUTTON,
+                lambda evt: self.callbackBtn(self.callbackBtn, "btnSweepSubDir"))
+        self.btnClean.Bind(wx.EVT_BUTTON,
+                lambda evt: self.callbackBtn(self.callbackBtn, "btnClean"))
+        self.boxBtns.Add(self.btnLoadRss, 0, wx.ALL, 1)
+        self.boxBtns.Add(self.btnSweepSubDir, 0, wx.ALL, 1)
+        self.boxBtns.Add(self.btnClean, 0, wx.ALL, 1)
+
+        # We create a box to pack widgets into.  This is described in detail
+        # in the "packing" section. The box is not really visible, it
+        # is just used as a tool to arrange widgets.
+        self.box0 = wx.BoxSizer(wx.HORIZONTAL)
+        self.box1 = wx.BoxSizer(wx.VERTICAL)
+        self.boxShows = wx.BoxSizer(wx.VERTICAL)
+
+        # Put the boxes into the main window.
+        self.lPSizer.Add(self.boxBtns)
+        self.lPSizer.Add(self.box0)
+        self.box0.Add(self.box1)
+        self.box0.Add(self.boxShows)
+
+        #frame.set_border_width(10)
+        #frame.Show()
+        #label = gtk.Label("Main")
+        self.notebook.AddPage(self.listPanel, "Main")#.append_page(frame, label)
+        """self.coversFrame = gtk.Frame("Covers Frame")
         self.coversFrame.set_border_width(10)
         self.coversBox = gtk.Table(4, 4, True)
         label = gtk.Label("Covers")
@@ -158,74 +200,19 @@ class MainWindow:
         self.coversFrame.show()
         self.tX = 0
         self.tY = 0
-        self.notebook.append_page(self.coversFrame, label)
+        self.notebook.append_page(self.coversFrame, label)"""
 
+        UtilDb().prepareDB()
         self.setConfs(UtilDb().getConfs())
-        label = gtk.Label("Config")
-        self.notebook.append_page(self.getConfigFrame(), label)
-        self.notebook.show()
+        #label = gtk.Label("Config")
+        self.notebook.AddPage(self.getConfigFrame(), "Config")
+        #self.notebook.Show()
 
-        self.window.add(self.notebook)
-        frame.add(self.scrolled_window)
-        self.btnLoadRss = gtk.Button("Load RSS")
-        self.btnSweepSubDir = gtk.Button("Search files (sub-dir)")
-        self.btnClean = gtk.Button("Clean missing")
+        self.Layout()
+        self.Show()
 
-        self.btnLoadRss.connect("clicked", self.callbackBtn, "btnLoadRss")
-        self.btnSweepSubDir.connect("clicked", self.callbackBtn, "btnSweepSubDir")
-        self.btnClean.connect("clicked", self.callbackBtn, "btnClean")
-        self.wrapper.add(self.btnLoadRss)
-        self.wrapper.add(self.btnSweepSubDir)
-        self.wrapper.add(self.btnClean)
-        self.wrapper.add(self.box)
-
-        # We create a box to pack widgets into.  This is described in detail
-        # in the "packing" section. The box is not really visible, it
-        # is just used as a tool to arrange widgets.
-        self.box1 = gtk.VBox(False, 0)
-        self.box2 = gtk.VBox(False, 0)
-
-        # Put the box into the main window.
-        self.box.pack_start(self.box1, True, True, 0)
-        self.box.pack_start(self.box2, True, True, 0)
-
-        # Creates a new button with the label "Button 1".
-        self.button1 = gtk.Button("Button 1")
-
-        # Now when the button is clicked, we call the "callback" method
-        # with a pointer to "button 1" as its argument
-        self.button1.connect("clicked", self.callback, "button 1")
-
-        # Instead of add(), we pack this button into the invisible
-        # box, which has been packed into the window.
-        #self.box1.pack_start(self.button1, True, True, 0)
-
-        # Always remember this step, this tells GTK that our preparation for
-        # this button is complete, and it can now be displayed.
-        #self.button1.show()
-
-        # Do these same steps again to create a second button
-        self.button2 = gtk.Button("Button 2")
-
-        # Call the same callback method with a different argument,
-        # passing a pointer to "button 2" instead.
-        self.button2.connect("clicked", self.callback, "button 2")
-
-        #self.box1.pack_start(self.button2, True, True, 0)
-
-        # The order in which we show the buttons is not really important, but I
-        # recommend showing the window last, so it all pops up at once.
-        #self.button2.show()
-        self.btnLoadRss.show()
-        self.btnSweepSubDir.show()
-        self.btnClean.show()
-        self.wrapper.show()
-        self.box.show()
-        self.box1.show()
-        self.box2.show()
-        self.window.show()
-
-        source_id = gtk.idle_add(rssParser.main, self)
+        #source_id = gtk.idle_add(rssParser.main, self)
+        rssParser.main(self)
 
     def addButton(self, episode):
         if (self.isConf("hide_unmonitored", "ON") and episode[5] == 0):
@@ -233,24 +220,32 @@ class MainWindow:
         if (self.isConf("hide_viewed", "ON") and episode['viewed'] == 1):
             return
 
-        self.boxShow = gtk.HBox(False, 0)
-        self.button3 = gtk.ToggleButton(episode['show'] + " S" +
+        #adiciona um botao rapido..
+        boxShow = wx.BoxSizer(wx.HORIZONTAL)
+        #self.boxShow = gtk.HBox(False, 0)
+        button3 = wx.ToggleButton(self.listPanel, -1, episode['show'] + " S" +
         str(episode['season']) + "E" + str(episode['episode']))
+        boxShow.Add(button3, 0, wx.ALL, 1)
         if (episode['viewed'] == 1):
-            self.button3.set_active(True)
+            button3.SetValue(True)
         else:
-            self.button3.set_active(False)
-        self.button3.connect("toggled", self.callbackEpisode, episode)
-        self.button3.connect("enter", self.callbackEpisodeInfo, episode)
-        self.buttonPlay = gtk.Button("Play")
-        self.buttonPlay.connect("clicked", self.callbackPlay, episode['file'])
-        self.boxShow.pack_start(self.button3, True, True, 0)
-        self.boxShow.pack_start(self.buttonPlay, True, True, 0)
-        self.box1.pack_start(self.boxShow, True, True, 0)
-        self.button3.show()
-        self.buttonPlay.show()
-        self.boxShow.show()
-        self.episodes.append(self.boxShow)
+            button3.SetValue(False)
+        #self.button3.connect("toggled", self.callbackEpisode, episode)
+        button3.Bind(wx.EVT_LEFT_DOWN,
+                lambda evt: self.callbackEpisode(button3, episode))
+        #self.button3.connect("enter", self.callbackEpisodeInfo, episode)
+        button3.Bind(wx.EVT_ENTER_WINDOW,
+                lambda evt: self.callbackEpisodeInfo(button3, episode))
+        buttonPlay = wx.Button(self.listPanel, -1, "Play")#gtk.Button("Play")
+        buttonPlay.Bind(wx.EVT_BUTTON,
+                lambda evt: self.callbackPlay(None, episode['file']))
+        #self.buttonPlay.connect("clicked", self.callbackPlay, episode['file'])
+        #self.argBind(wx.EVT_BUTTON, self.callbackPlay, self.buttonPlay, episode['file'])
+        boxShow.Add(buttonPlay, 0, wx.ALL, 1)
+        #self.episodes.append(self.boxShow)
+        self.box1.Add(boxShow, 0, wx.ALL, 1)
+        self.listPanel.Layout()
+        self.listPanel.AdjustScrollbars()
 
     def clearEpisodes(self):
         for box in self.episodes:
@@ -259,6 +254,9 @@ class MainWindow:
             box.hide()
         for box in self.showCovers:
             self.coversBox.remove(box)
+        self.box1.DeleteWindows()
+        self.boxShows.DeleteWindows()
+        self.listPanel.Layout()
         self.episodes = []
         self.shows = []
         self.showCovers = []
@@ -277,26 +275,21 @@ class MainWindow:
     def addShow(self, show):
         if (show['monitored'] != 1 and self.isConf("hide_unmonitored_shows", "ON")):
             return
-        self.boxShow = gtk.HBox(False, 0)
-        self.btnMonitored = gtk.ToggleButton(show['show'])
-        if (show['monitored'] == 1):
-            self.btnMonitored.set_active(True)
-        else:
-            self.btnMonitored.set_active(False)
-        self.btnMonitored.connect("toggled", self.callbackShow, show)
-        self.btnFetching = gtk.ToggleButton("Fetching")
-        if (show['fetching'] == 1):
-            self.btnFetching.set_active(True)
-        else:
-            self.btnFetching.set_active(False)
-        self.btnFetching.connect("clicked", self.callbackShow, show)
-        self.boxShow.pack_start(self.btnMonitored, True, True, 0)
-        self.boxShow.pack_start(self.btnFetching, True, True, 0)
-        self.box2.pack_start(self.boxShow, True, True, 0)
-        self.btnMonitored.show()
-        self.btnFetching.show()
-        self.boxShow.show()
-        self.shows.append(self.boxShow)
+        boxShow = wx.BoxSizer(wx.HORIZONTAL)
+        btnMonitored = wx.ToggleButton(self.listPanel, -1, show['show'])
+        btnMonitored.SetValue(show['monitored'] == 1)
+        btnMonitored.Bind(wx.EVT_TOGGLEBUTTON,
+                lambda evt: self.callbackShow(btnMonitored, show))
+        btnFetching = wx.ToggleButton(self.listPanel, -1, "Fetching")
+        btnFetching.SetValue(show['fetching'] == 1)
+        btnFetching.Bind(wx.EVT_TOGGLEBUTTON,
+                lambda evt: self.callbackShow(btnFetching, show))
+
+        boxShow.Add(btnMonitored)
+        boxShow.Add(btnFetching)
+        self.boxShows.Add(boxShow)
+        self.listPanel.Layout()
+        return
 
         #menu
         menu = gtk.Menu()
@@ -363,50 +356,55 @@ class MainWindow:
 
     def getConfigFrame(self):
         confs = UtilDb().getConfs()
-        self.configFrame = gtk.Frame("Config Frame")
-        self.configFrame.set_border_width(10)
-        self.configBox = gtk.Table(1, 4, False)
-        label = gtk.Label("Config")
+        self.configFrame = wx.Panel(self.notebook)#gtk.Frame("Config Frame")
+        sizer = wx.BoxSizer(wx.VERTICAL)#wx.GridBagSizer(hgap=5, vgap=5)
+        self.configFrame.SetSizer(sizer)
+        #label = gtk.Label("Config")
 
-        self.btn_hide_unmonitored_shows = gtk.CheckButton("Hide unmonitored shows")
-        self.configBox.attach(self.btn_hide_unmonitored_shows, 0, 1, 0, 1)
-        self.btn_hide_unmonitored_shows.show()
-        self.btn_hide_unmonitored_shows.set_active(self.isConf("hide_unmonitored_shows", "ON"))
-        self.btn_hide_unmonitored_shows.connect("toggled", self.callbackBtn, "hide_unmonitored_shows")
+        self.btn_hide_unmonitored_shows = wx.CheckBox(self.configFrame, -1, "Hide unmonitored shows", (10, 10))
+        self.btn_hide_unmonitored_shows.SetValue(self.isConf("hide_unmonitored", "ON"))
+        #self.btn_hide_unmonitored.connect("toggled", self.callbackBtn, "hide_unmonitored")
+        self.btn_hide_unmonitored_shows.Bind(wx.EVT_CHECKBOX,
+                lambda evt: self.callbackBtn(self.btn_hide_unmonitored_shows, "hide_unmonitored_shows"))
+        sizer.Add(self.btn_hide_unmonitored_shows, 0, wx.ALL, 10)
 
-        self.btn_hide_unmonitored = gtk.CheckButton("Hide unmonitored shows' episodes")
-        self.configBox.attach(self.btn_hide_unmonitored, 0, 1, 1, 2)
-        self.btn_hide_unmonitored.show()
-        self.btn_hide_unmonitored.set_active(self.isConf("hide_unmonitored", "ON"))
-        self.btn_hide_unmonitored.connect("toggled", self.callbackBtn, "hide_unmonitored")
+        self.btn_hide_unmonitored = wx.CheckBox(self.configFrame, -1, "Hide unmonitored shows' episodes", (10, 10))
+        self.btn_hide_unmonitored.SetValue(self.isConf("hide_unmonitored", "ON"))
+        #self.btn_hide_unmonitored.connect("toggled", self.callbackBtn, "hide_unmonitored")
+        self.btn_hide_unmonitored.Bind(wx.EVT_CHECKBOX,
+                lambda evt: self.callbackBtn(self.btn_hide_unmonitored, "hide_unmonitored"))
+        sizer.Add(self.btn_hide_unmonitored, 0, wx.ALL, 10)
 
-        self.btn_hide_viewed = gtk.CheckButton("Hide viewed episodes")
-        self.configBox.attach(self.btn_hide_viewed, 0, 1, 2, 3)
-        self.btn_hide_viewed.show()
-        self.btn_hide_viewed.set_active(self.isConf("hide_viewed", "ON"))
-        self.btn_hide_viewed.connect("toggled", self.callbackBtn, "hide_viewed")
-
-        self.txt_content_path = gtk.Entry()
-        self.configBox.attach(self.txt_content_path, 0, 1, 3, 4)
-        self.txt_content_path.show()
+        self.btn_hide_viewed = wx.CheckBox(self.configFrame, -1, "Hide viewed episodes", (10, 10))
+        self.btn_hide_viewed.SetValue(self.isConf("hide_viewed", "ON"))
+        #self.btn_hide_viewed.connect("toggled", self.callbackBtn, "hide_viewed")
+        self.btn_hide_viewed.Bind(wx.EVT_CHECKBOX,
+                lambda evt: self.callbackBtn(self.btn_hide_viewed, "hide_viewed"))
+        sizer.Add(self.btn_hide_viewed, 0, wx.ALL, 10)
+        self.txt_content_path = wx.TextCtrl(self.configFrame, size=(300,30))#gtk.Entry()
+        #self.configBox.attach(self.txt_content_path, 0, 1, 3, 4)
+        #self.txt_content_path.show()
         if self.getConf("content_path"):
-            self.txt_content_path.set_text(self.getConf("content_path"))
-        self.txt_content_path.connect("key-press-event", self.callbackEntry, "content_path")
-        self.txt_content_path.set_tooltip_text("Content path")
+            self.txt_content_path.SetValue(self.getConf("content_path"))
+        #self.txt_content_path.connect("key-press-event", self.callbackEntry, "content_path")
+        self.txt_content_path.Bind(wx.EVT_KEY_DOWN,
+                lambda evt: self.callbackEntry(self.txt_content_path, evt, "content_path"))
+        sizer.Add(self.txt_content_path, 0, wx.ALL, 10)
+        #self.txt_content_path.set_tooltip_text("Content path")
 
-        sw = gtk.ScrolledWindow()
-        sw.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-        self.txt_log = gtk.TextView()
-        self.txt_log.set_editable(False)
-        self.txt_log.set_cursor_visible(False)
-        sw.add(self.txt_log)
-        sw.show()
-        self.configBox.attach(sw, 0, 1, 4, 6)
-        self.txt_log.show()
-
+        #sw = gtk.ScrolledWindow()
+        #sw.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+        self.txt_log = wx.TextCtrl(self.configFrame, size=(400,300), style=wx.TE_MULTILINE | wx.TE_READONLY)#gtk.TextView()
+        #self.txt_log.set_cursor_visible(False)
+        #sw.add(self.txt_log)
+        #sw.show()
+        #self.configBox.attach(sw, 0, 1, 4, 6)
+        sizer.Add(self.txt_log, 0, wx.ALL, 10)
+        self.txt_log.Show()
+        """
         self.configFrame.add(self.configBox)
-        self.configBox.show()
-        self.configFrame.show()
+        self.configBox.show()"""
+        self.configFrame.Show()
         return self.configFrame
 
     def setConfs(self, confs):
@@ -425,15 +423,15 @@ class MainWindow:
         return False
 
     def addLog(self, text):
-        gtk.idle_add(self._addLog, text)
+        wx.CallAfter(self.txt_log.AppendText, text + "\n")
 
     def _addLog(self, text):
         enditer = self.txt_log.get_buffer().get_end_iter()
         self.txt_log.get_buffer().insert(enditer, text + "\n")
 
     def addShowInfo(self, button, text):
-        #gtk.idle_add(self.btnClean.set_label, text)
-        gtk.idle_add(button.set_tooltip_text, text)
+        #gtk.idle_add(button.set_tooltip_text, text)
+        wx.CallAfter(button.SetToolTip, wx.ToolTip(text))
 
 
 def main():

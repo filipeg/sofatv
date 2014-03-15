@@ -2,9 +2,10 @@
 # -*- coding: utf-8 *-*
 import os
 import sys
+import wx
 import glob
 from configobj import ConfigObj
-import mainWindow
+from mainWindow import MainWindow
 import feedparser
 import episodeparser
 import sqlite3
@@ -70,8 +71,17 @@ def main():
             pass
 
 
+class SofaTVApp(wx.App):
+    def OnInit(self):
+        frame = MainWindow(None)
+        self.SetTopWindow(frame)
+
+        frame.Show(True)
+        return True
+
+
 if __name__ == '__main__':
-    #main()
-    hello = mainWindow.MainWindow()
-    #hello.main()
-    mainWindow.main()
+    #hello = mainWindow.MainWindow()
+    #mainWindow.main()
+    app = SofaTVApp(redirect=False)
+    app.MainLoop()
