@@ -67,7 +67,7 @@ def main(ui):
             pass
     #cfg.write()
     if len(files_grabbed) > 0:
-         db.commit()
+        db.commit()
     db.loadDB(ui)
     db.closeConn()
 
@@ -105,7 +105,8 @@ def sweepSubDir(ui, db, path, levels):
             pass
         except sqlite3.IntegrityError:
             pass
-    db.commit()
+    if len(files_grabbed) > 0:
+        db.commit()
     episode_count = len(episodes)
 
     # Enters sub-directories
@@ -158,7 +159,9 @@ def sweepSeasonSubDir(ui, db, path, showname, dirname):
             pass
         except sqlite3.IntegrityError:
             pass
-    db.commit()
+    if len(files_grabbed) > 0:
+        db.commit()
+
     episode_count = len(episodes)
 
     return episode_count
@@ -204,7 +207,6 @@ def loadRSSFeed(db, feedUrl, ui):
     c = db.getC()
 
     for item in feed["items"]:
-        loaded = True
         title = item["title"].encode('ascii', 'ignore')
         try:
             episode = episodeparser.parse_filename(title)
@@ -217,6 +219,7 @@ def loadRSSFeed(db, feedUrl, ui):
                     #os.system(command)
                     subprocess.Popen(['transmission-gtk', command])
                     db.insertRssEpisode(episode)
+                    loaded = True
                     ui.addLog("Downloading " + episode[0] + "S" +
                         str(episode[1]) + "E" + str(episode[2]))
                 else:
