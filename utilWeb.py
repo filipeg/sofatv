@@ -62,6 +62,8 @@ def GetShowID(showname):
     else:
         imgUrl = "http://images.tvrage.com/shows/" + str(int(int(ShowID)/1000+1)) + "/" + ShowID + ".jpg"
         cachePath = os.path.expanduser("~/.cache/sofaTV/")
+        if not os.path.exists(cachePath):
+            os.makedirs(cachePath)
         cachePath = cachePath + ShowID + ".jpg"
         urllib.urlretrieve(imgUrl, cachePath)
         pass #ShowID=int(ShowID)
