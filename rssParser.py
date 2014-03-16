@@ -38,6 +38,12 @@ def main(ui):
     types = ('*.avi', '*.mkv', '*.mp4') # the tuple of file types
     files_grabbed = []
     episodes = []
+
+    if not os.path.exists(path):
+        db.loadDB(ui)
+        db.closeConn()
+        return
+
     os.chdir(path)
     #cfg['episodes'] = {}
     for files in types:
