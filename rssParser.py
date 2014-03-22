@@ -201,12 +201,13 @@ def loadRSSThread(ui):
 
 # Called by loadRSS(), loads an URL
 def loadRSSFeed(db, feedUrl, ui):
-    loaded = False
+    loaded = modified = False
     ui.addLog("** Loading RSS feed: " + feedUrl)
     feed = feedparser.parse(feedUrl)
     c = db.getC()
 
     for item in feed["items"]:
+        loaded = True
         title = item["title"].encode('ascii', 'ignore')
         try:
             episode = episodeparser.parse_filename(title)
@@ -219,7 +220,7 @@ def loadRSSFeed(db, feedUrl, ui):
                     #os.system(command)
                     subprocess.Popen(['transmission-gtk', command])
                     db.insertRssEpisode(episode)
-                    loaded = True
+                    modified = True
                     ui.addLog("Downloading " + episode[0] + "S" +
                         str(episode[1]) + "E" + str(episode[2]))
                 else:
@@ -227,7 +228,7 @@ def loadRSSFeed(db, feedUrl, ui):
                         str(episode[1]) + "E" + str(episode[2]))
         except NameError:
             pass
-    if loaded:
+    if modified:
         db.commit()
-    else:
+    if not loaded:
         ui.addLog("Failed to load feed")
