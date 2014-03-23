@@ -152,7 +152,8 @@ class MainWindow(wx.Frame):
 
         #self.listPanel = wx.Panel(parent=self.notebook, id=wx.ID_ANY)#, label="Main Frame")#gtk.Frame("Main Frame")
         self.listPanel = wx.ScrolledWindow(parent=self.notebook, id=wx.ID_ANY)
-        self.listPanel.SetScrollbars(1, 1, 1, 1)
+        self.listPanel.SetScrollRate(20, 20)
+        self.listPanel.EnableScrolling(True,True)
         #adiciona o box1 agora para ter onde colocar os botoes
         self.lPSizer = wx.BoxSizer(wx.VERTICAL)
         self.listPanel.SetSizer(self.lPSizer)
@@ -244,8 +245,8 @@ class MainWindow(wx.Frame):
         boxShow.Add(buttonPlay, 0, wx.ALL, 1)
         #self.episodes.append(self.boxShow)
         self.box1.Add(boxShow, 0, wx.ALL, 1)
-        self.listPanel.Layout()
-        self.listPanel.AdjustScrollbars()
+        w, h = self.lPSizer.GetMinSize()
+        self.listPanel.SetVirtualSize((w, h))
 
     def clearEpisodes(self):
         for box in self.episodes:
