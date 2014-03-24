@@ -208,7 +208,18 @@ class MainWindow(wx.Frame):
         #label = gtk.Label("Config")
         self.notebook.AddPage(self.getConfigFrame(), "Config")
         #self.notebook.Show()
-
+		
+		#@modified ana.castro Issue #2
+		#Looping on all the shows which are being monitoried
+		# checking if there are any unseen episodes
+		# and when this condition is verified, adding a new tab to the main panel
+		#Defining the tab's content:
+		# it consists on all the episodes and the options to see it and set it as already seen
+        #self.notebook.AddPage(self.getConfigFrame(), "")
+        shows = UtilDb().getMonitoredShows()
+        for show in shows:
+		   self.notebook.AddPage(self.getShowFrame(show["show"]), show["show"])		
+		
         self.Layout()
         self.Show()
 
@@ -407,6 +418,44 @@ class MainWindow(wx.Frame):
         self.configBox.show()"""
         self.configFrame.Show()
         return self.configFrame
+
+    def getShowFrame(self, show):
+        #confs = UtilDb().getConfs()
+		#getShowEpisodes(self, show
+		#self.notebook.AddPage(self.getConfigFrame(), show["show"])
+        showFrame = wx.Panel(self.notebook)
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        showFrame.SetSizer(sizer)
+		
+        episodes = UtilDb().getShowEpisodes(show)
+        for episode in episodes:
+            print episode
+            episodeButtonSeen = wx.Button(showFrame, -1, str(episode['season']))
+            sizer.Add(episodeButtonSeen)
+
+        return showFrame
+        self.btn_hide_unmonitored_shows = wx.CheckBox(self.showFrame, -1, "Hide unmonitored shows", (10, 10))
+        self.btn_hide_unmonitored_shows.SetValue(self.isConf("hide_unmonitored", "ON"))
+        #self.btn_hide_unmonitored.connect("toggled", self.callbackBtn, "hide_unmonitored")
+        self.btn_hide_unmonitored_shows.Bind(wx.EVT_CHECKBOX,
+                lambda evt: self.callbackBtn(self.btn_hide_unmonitored_shows, "hide_unmonitored_shows"))
+        sizer.Add(self.btn_hide_unmonitored_shows, 0, wx.ALL, 10)
+
+
+        #sw = gtk.ScrolledWindow()
+        #sw.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+        self.txt_log = wx.TextCtrl(self.showFrame, size=(400,300), style=wx.TE_MULTILINE | wx.TE_READONLY)#gtk.TextView()
+        #self.txt_log.set_cursor_visible(False)
+        #sw.add(self.txt_log)
+        #sw.show()
+        #self.configBox.attach(sw, 0, 1, 4, 6)
+        sizer.Add(self.txt_log, 0, wx.ALL, 10)
+        self.txt_log.Show()
+        """
+        self.showFrame.add(self.configBox)
+        self.showFrame.show()"""
+        self.showFrame.Show()
+        return self.showFrame
 
     def setConfs(self, confs):
         self.confs = confs
