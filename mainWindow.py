@@ -227,15 +227,18 @@ class MainWindow(wx.Frame):
         rssParser.main(self)
 
     def addButton(self, episode):
+        return self.addEpisodePanel(episode, self.listPanel, self.box1)
+
+    def addEpisodePanel(self, episode, parentPanel, parentSizer):
         if (self.isConf("hide_unmonitored", "ON") and episode[5] == 0):
             return
         if (self.isConf("hide_viewed", "ON") and episode['viewed'] == 1):
             return
-
+		
         #adiciona um botao rapido..
         boxShow = wx.BoxSizer(wx.HORIZONTAL)
         #self.boxShow = gtk.HBox(False, 0)
-        button3 = wx.ToggleButton(self.listPanel, -1, episode['show'] + " S" +
+        button3 = wx.ToggleButton(parentPanel, -1, episode['show'] + " S" +
         str(episode['season']) + "E" + str(episode['episode']))
         boxShow.Add(button3, 0, wx.ALL, 1)
         if (episode['viewed'] == 1):
@@ -248,16 +251,16 @@ class MainWindow(wx.Frame):
         #self.button3.connect("enter", self.callbackEpisodeInfo, episode)
         button3.Bind(wx.EVT_ENTER_WINDOW,
                 lambda evt: self.callbackEpisodeInfo(button3, episode))
-        buttonPlay = wx.Button(self.listPanel, -1, "Play")#gtk.Button("Play")
+        buttonPlay = wx.Button(parentPanel, -1, "Play")#gtk.Button("Play")
         buttonPlay.Bind(wx.EVT_BUTTON,
                 lambda evt: self.callbackPlay(None, episode['file']))
         #self.buttonPlay.connect("clicked", self.callbackPlay, episode['file'])
         #self.argBind(wx.EVT_BUTTON, self.callbackPlay, self.buttonPlay, episode['file'])
         boxShow.Add(buttonPlay, 0, wx.ALL, 1)
         #self.episodes.append(self.boxShow)
-        self.box1.Add(boxShow, 0, wx.ALL, 1)
+        parentSizer.Add(boxShow, 0, wx.ALL, 1)
         w, h = self.lPSizer.GetMinSize()
-        self.listPanel.SetVirtualSize((w, h))
+        parentPanel.SetVirtualSize((w, h))
 
     def clearEpisodes(self):
         for box in self.episodes:
@@ -420,42 +423,16 @@ class MainWindow(wx.Frame):
         return self.configFrame
 
     def getShowFrame(self, show):
-        #confs = UtilDb().getConfs()
-		#getShowEpisodes(self, show
-		#self.notebook.AddPage(self.getConfigFrame(), show["show"])
         showFrame = wx.Panel(self.notebook)
         sizer = wx.BoxSizer(wx.VERTICAL)
         showFrame.SetSizer(sizer)
 		
         episodes = UtilDb().getShowEpisodes(show)
         for episode in episodes:
-            print episode
-            episodeButtonSeen = wx.Button(showFrame, -1, str(episode['season']))
-            sizer.Add(episodeButtonSeen)
-
+            #episodeLine = wx.Box(self.addButton(episode))
+            self.addEpisodePanel(episode, showFrame, sizer)
+            #sizer.Add(episodeLine)			
         return showFrame
-        self.btn_hide_unmonitored_shows = wx.CheckBox(self.showFrame, -1, "Hide unmonitored shows", (10, 10))
-        self.btn_hide_unmonitored_shows.SetValue(self.isConf("hide_unmonitored", "ON"))
-        #self.btn_hide_unmonitored.connect("toggled", self.callbackBtn, "hide_unmonitored")
-        self.btn_hide_unmonitored_shows.Bind(wx.EVT_CHECKBOX,
-                lambda evt: self.callbackBtn(self.btn_hide_unmonitored_shows, "hide_unmonitored_shows"))
-        sizer.Add(self.btn_hide_unmonitored_shows, 0, wx.ALL, 10)
-
-
-        #sw = gtk.ScrolledWindow()
-        #sw.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-        self.txt_log = wx.TextCtrl(self.showFrame, size=(400,300), style=wx.TE_MULTILINE | wx.TE_READONLY)#gtk.TextView()
-        #self.txt_log.set_cursor_visible(False)
-        #sw.add(self.txt_log)
-        #sw.show()
-        #self.configBox.attach(sw, 0, 1, 4, 6)
-        sizer.Add(self.txt_log, 0, wx.ALL, 10)
-        self.txt_log.Show()
-        """
-        self.showFrame.add(self.configBox)
-        self.showFrame.show()"""
-        self.showFrame.Show()
-        return self.showFrame
 
     def setConfs(self, confs):
         self.confs = confs
