@@ -210,13 +210,11 @@ class MainWindow(wx.Frame):
         #self.notebook.Show()
 		
 		#@modified ana.castro Issue #2
-		#Looping on all the shows which are being monitoried
-		# checking if there are any unseen episodes
-		# and when this condition is verified, adding a new tab to the main panel
+		#Getting the shows being monitored and which have unsee episodes;
+		# creating a new tab for each of the shows
 		#Defining the tab's content:
-		# it consists on all the episodes and the options to see it and set it as already seen
-        #self.notebook.AddPage(self.getConfigFrame(), "")
-        shows = UtilDb().getMonitoredShows()
+		# it consists on all the unseen episodes and the options to see it and set it as already seen
+        shows = UtilDb().getMonitoredShowsWithUnseenEpisodes()
         for show in shows:
 		   self.notebook.AddPage(self.getShowFrame(show["show"]), show["show"])		
 		
@@ -226,9 +224,11 @@ class MainWindow(wx.Frame):
         #source_id = gtk.idle_add(rssParser.main, self)
         rssParser.main(self)
 
+    #@modified ana.castro Issue #2
     def addButton(self, episode):
         return self.addEpisodePanel(episode, self.listPanel, self.box1)
 
+    #@modified ana.castro Issue #2
     def addEpisodePanel(self, episode, parentPanel, parentSizer):
         if (self.isConf("hide_unmonitored", "ON") and episode[5] == 0):
             return
@@ -422,6 +422,8 @@ class MainWindow(wx.Frame):
         self.configFrame.Show()
         return self.configFrame
 
+    #Returning a panel with two buttons
+    #@created ana.castro Issue #2
     def getShowFrame(self, show):
         showFrame = wx.Panel(self.notebook)
         sizer = wx.BoxSizer(wx.VERTICAL)
@@ -429,9 +431,7 @@ class MainWindow(wx.Frame):
 		
         episodes = UtilDb().getShowEpisodes(show)
         for episode in episodes:
-            #episodeLine = wx.Box(self.addButton(episode))
             self.addEpisodePanel(episode, showFrame, sizer)
-            #sizer.Add(episodeLine)			
         return showFrame
 
     def setConfs(self, confs):
