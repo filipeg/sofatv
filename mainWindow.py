@@ -234,7 +234,7 @@ class MainWindow(wx.Frame):
             return
         if (self.isConf("hide_viewed", "ON") and episode['viewed'] == 1):
             return
-		
+
         #adiciona um botao rapido..
         boxShow = wx.BoxSizer(wx.HORIZONTAL)
         #self.boxShow = gtk.HBox(False, 0)
