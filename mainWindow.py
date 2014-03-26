@@ -9,6 +9,7 @@ import threading
 import rssParser
 from utilDb import UtilDb
 import utilWeb
+import ctypes
 
 class MainWindow(wx.Frame):
 
@@ -93,7 +94,11 @@ class MainWindow(wx.Frame):
         if sys.platform.startswith('darwin'):
             subprocess.call(('open', filepath))
         elif os.name == 'nt':
-            os.startfile(filepath)
+            #@modified ana.castro Issue #3
+            try:
+              os.startfile(filepath)
+            except WindowsError, err:
+              ctypes.windll.user32.MessageBoxA(0, "Driver specified for file, not found", "Error", 0)
         elif os.name == 'posix':
             #pid = os.fork()
             #if pid > 0:
@@ -208,14 +213,28 @@ class MainWindow(wx.Frame):
         #label = gtk.Label("Config")
         self.notebook.AddPage(self.getConfigFrame(), "Config")
         #self.notebook.Show()
-
+		
+		#@modified ana.castro Issue #2
+		#Getting the shows being monitored and which have unsee episodes;
+		# creating a new tab for each of the shows
+		#Defining the tab's content:
+		# it consists on all the unseen episodes and the options to see it and set it as already seen
+        shows = UtilDb().getMonitoredShowsWithUnseenEpisodes()
+        for show in shows:
+		   self.notebook.AddPage(self.getShowFrame(show["show"]), show["show"])		
+		
         self.Layout()
         self.Show()
 
         #source_id = gtk.idle_add(rssParser.main, self)
         rssParser.main(self)
 
+    #@modified ana.castro Issue #2
     def addButton(self, episode):
+        return self.addEpisodePanel(episode, self.listPanel, self.box1)
+
+    #@modified ana.castro Issue #2
+    def addEpisodePanel(self, episode, parentPanel, parentSizer):
         if (self.isConf("hide_unmonitored", "ON") and episode[5] == 0):
             return
         if (self.isConf("hide_viewed", "ON") and episode['viewed'] == 1):
@@ -224,7 +243,7 @@ class MainWindow(wx.Frame):
         #adiciona um botao rapido..
         boxShow = wx.BoxSizer(wx.HORIZONTAL)
         #self.boxShow = gtk.HBox(False, 0)
-        button3 = wx.ToggleButton(self.listPanel, -1, episode['show'] + " S" +
+        button3 = wx.ToggleButton(parentPanel, -1, episode['show'] + " S" +
         str(episode['season']) + "E" + str(episode['episode']))
         boxShow.Add(button3, 0, wx.ALL, 1)
         if (episode['viewed'] == 1):
@@ -237,16 +256,16 @@ class MainWindow(wx.Frame):
         #self.button3.connect("enter", self.callbackEpisodeInfo, episode)
         button3.Bind(wx.EVT_ENTER_WINDOW,
                 lambda evt: self.callbackEpisodeInfo(button3, episode))
-        buttonPlay = wx.Button(self.listPanel, -1, "Play")#gtk.Button("Play")
+        buttonPlay = wx.Button(parentPanel, -1, "Play")#gtk.Button("Play")
         buttonPlay.Bind(wx.EVT_BUTTON,
                 lambda evt: self.callbackPlay(None, episode['file']))
         #self.buttonPlay.connect("clicked", self.callbackPlay, episode['file'])
         #self.argBind(wx.EVT_BUTTON, self.callbackPlay, self.buttonPlay, episode['file'])
         boxShow.Add(buttonPlay, 0, wx.ALL, 1)
         #self.episodes.append(self.boxShow)
-        self.box1.Add(boxShow, 0, wx.ALL, 1)
+        parentSizer.Add(boxShow, 0, wx.ALL, 1)
         w, h = self.lPSizer.GetMinSize()
-        self.listPanel.SetVirtualSize((w, h))
+        parentPanel.SetVirtualSize((w, h))
 
     def clearEpisodes(self):
         for box in self.episodes:
@@ -407,6 +426,18 @@ class MainWindow(wx.Frame):
         self.configBox.show()"""
         self.configFrame.Show()
         return self.configFrame
+
+    #Returning a panel with two buttons
+    #@created ana.castro Issue #2
+    def getShowFrame(self, show):
+        showFrame = wx.Panel(self.notebook)
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        showFrame.SetSizer(sizer)
+		
+        episodes = UtilDb().getShowEpisodes(show)
+        for episode in episodes:
+            self.addEpisodePanel(episode, showFrame, sizer)
+        return showFrame
 
     def setConfs(self, confs):
         self.confs = confs

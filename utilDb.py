@@ -182,7 +182,8 @@ class UtilDb():
         self.commit()
         self.closeConn()
         return True
-
+		
+		
     def loadDB(self, ui):
         ui.clearEpisodes()
         c = self.getC()
@@ -201,3 +202,24 @@ class UtilDb():
             path = str(row[1]) + "/"
         self.closeConn()
         return path
+	
+	#Returns a list with all the monitored shows
+	#@created ana.castro Issue #2
+    def getMonitoredShows(self):
+        c = self.getC()        
+        return c.execute("""SELECT show, monitored, fetching, cover, hasCover FROM shows WHERE monitored = 1 ORDER BY show""")
+
+	#Returns a list with all the monitored shows which have unseen episodes
+	#@created ana.castro Issue #2
+    def getMonitoredShowsWithUnseenEpisodes(self):
+        c = self.getC()        
+        return c.execute("""SELECT DISTINCT(shows.show), shows.monitored, shows.fetching, shows.cover, shows.hasCover FROM episodes INNER JOIN shows ON episodes.show = shows.show WHERE shows.monitored = 1 AND episodes.viewed != 1 ORDER BY shows.show""")
+		
+	#Returns a list with all the unseen episodes from the given show
+	#@created ana.castro Issue #2
+    def getShowEpisodes(self, show):
+        c = self.getC()        
+        return c.execute("""SELECT episodes.*, shows.monitored
+                            FROM episodes INNER JOIN shows ON episodes.show = shows.show
+                            WHERE viewed != 1 
+							AND shows.show = '""" + show + """' ORDER BY episodes.show""")
