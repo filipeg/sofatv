@@ -9,6 +9,7 @@ import threading
 import rssParser
 from utilDb import UtilDb
 import utilWeb
+import ctypes
 
 class MainWindow(wx.Frame):
 
@@ -93,7 +94,11 @@ class MainWindow(wx.Frame):
         if sys.platform.startswith('darwin'):
             subprocess.call(('open', filepath))
         elif os.name == 'nt':
-            os.startfile(filepath)
+            #@modified ana.castro Issue #3
+            try:
+              os.startfile(filepath)
+            except WindowsError, err:
+              ctypes.windll.user32.MessageBoxA(0, "Driver specified for file, not found", "Error", 0)
         elif os.name == 'posix':
             #pid = os.fork()
             #if pid > 0:
