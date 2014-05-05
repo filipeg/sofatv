@@ -48,6 +48,10 @@ class MainWindow(wx.Frame):
                 ("OFF", "ON")[widget.GetValue()])
             self.setConfs(UtilDb().getConfs())
             UtilDb().loadDB(self)
+        elif (data == "display_show_frame"):
+            UtilDb().setConf("display_show_frame",
+                ("OFF", "ON")[widget.GetValue()])
+            self.setConfs(UtilDb().getConfs())
 
     def callbackEntry(self, widget, event, data):
         #keyname = gtk.gdk.keyval_name(event.keyval)
@@ -219,9 +223,10 @@ class MainWindow(wx.Frame):
 		# creating a new tab for each of the shows
 		#Defining the tab's content:
 		# it consists on all the unseen episodes and the options to see it and set it as already seen
-        shows = UtilDb().getMonitoredShowsWithUnseenEpisodes()
-        for show in shows:
-		   self.notebook.AddPage(self.getShowFrame(show["show"]), show["show"])		
+        if self.isConf("display_show_frame", "ON"):
+            shows = UtilDb().getMonitoredShowsWithUnseenEpisodes()
+            for show in shows:
+		        self.notebook.AddPage(self.getShowFrame(show["show"]), show["show"])		
 		
         self.Layout()
         self.Show()
@@ -401,6 +406,13 @@ class MainWindow(wx.Frame):
         self.btn_hide_viewed.Bind(wx.EVT_CHECKBOX,
                 lambda evt: self.callbackBtn(self.btn_hide_viewed, "hide_viewed"))
         sizer.Add(self.btn_hide_viewed, 0, wx.ALL, 10)
+
+        btn_show_frame = wx.CheckBox(self.configFrame, -1, "Display Show frame", (10, 10))
+        btn_show_frame.SetValue(self.isConf("display_show_frame", "ON"))
+        btn_show_frame.Bind(wx.EVT_CHECKBOX,
+                lambda evt: self.callbackBtn(btn_show_frame, "display_show_frame"))
+        sizer.Add(btn_show_frame, 0, wx.ALL, 10)
+
         self.txt_content_path = wx.TextCtrl(self.configFrame, size=(300,30))#gtk.Entry()
         #self.configBox.attach(self.txt_content_path, 0, 1, 3, 4)
         #self.txt_content_path.show()
