@@ -61,6 +61,11 @@ class MainWindow(wx.Frame):
             UtilDb().setConf(data, widget.GetValue())
             self.setConfs(UtilDb().getConfs())
             self.addLog("* Content path updated")
+        elif (data == "btorrent_client_path"
+            and keycode == 306):
+            UtilDb().setConf(data, widget.GetValue())
+            self.setConfs(UtilDb().getConfs())
+            self.addLog("* BitTorrent client path updated")
         else:
            event.Skip() 
 
@@ -413,16 +418,27 @@ class MainWindow(wx.Frame):
                 lambda evt: self.callbackBtn(btn_show_frame, "display_show_frame"))
         sizer.Add(btn_show_frame, 0, wx.ALL, 10)
 
-        self.txt_content_path = wx.TextCtrl(self.configFrame, size=(300,30))#gtk.Entry()
-        #self.configBox.attach(self.txt_content_path, 0, 1, 3, 4)
-        #self.txt_content_path.show()
+        leftColSize = 160
+        boxCPath = wx.BoxSizer(wx.HORIZONTAL)
+        txt_content_path = wx.TextCtrl(self.configFrame, size=(300,30))#gtk.Entry()
         if self.getConf("content_path"):
-            self.txt_content_path.SetValue(self.getConf("content_path"))
+            txt_content_path.SetValue(self.getConf("content_path"))
         #self.txt_content_path.connect("key-press-event", self.callbackEntry, "content_path")
-        self.txt_content_path.Bind(wx.EVT_KEY_DOWN,
-                lambda evt: self.callbackEntry(self.txt_content_path, evt, "content_path"))
-        sizer.Add(self.txt_content_path, 0, wx.ALL, 10)
-        #self.txt_content_path.set_tooltip_text("Content path")
+        txt_content_path.Bind(wx.EVT_KEY_DOWN,
+                lambda evt: self.callbackEntry(txt_content_path, evt, "content_path"))
+        boxCPath.Add(wx.StaticText(self.configFrame, size=(leftColSize,15), label="Content Path:"), 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 1)
+        boxCPath.Add(txt_content_path, 0, wx.ALL, 1)
+        sizer.Add(boxCPath, 0, wx.ALL, 10)
+
+        boxBtCP = wx.BoxSizer(wx.HORIZONTAL)
+        txt_btclient_path = wx.TextCtrl(self.configFrame, size=(200,30))
+        if self.getConf("btorrent_client_path"):
+            txt_btclient_path.SetValue(self.getConf("btorrent_client_path"))
+        txt_btclient_path.Bind(wx.EVT_KEY_DOWN,
+                lambda evt: self.callbackEntry(txt_btclient_path, evt, "btorrent_client_path"))
+        boxBtCP.Add(wx.StaticText(self.configFrame, size=(leftColSize,15), label="BitTorrent Client Path:"), 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 1)
+        boxBtCP.Add(txt_btclient_path, 0, wx.ALL, 1)
+        sizer.Add(boxBtCP, 0, wx.ALL, 10)
 
         #sw = gtk.ScrolledWindow()
         #sw.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)

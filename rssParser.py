@@ -201,6 +201,10 @@ def loadRSSThread(ui):
 
 # Called by loadRSS(), loads an URL
 def loadRSSFeed(db, feedUrl, ui):
+    if ui.getConf("btorrent_client_path"):
+        client = ui.getConf("btorrent_client_path")
+    else:
+        return
     loaded = modified = False
     ui.addLog("** Loading RSS feed: " + feedUrl)
     feed = feedparser.parse(feedUrl)
@@ -213,12 +217,12 @@ def loadRSSFeed(db, feedUrl, ui):
             episode = episodeparser.parse_filename(title)
             if (db.showInList(c, episode[0])):
                 if (db.shouldDownload(c, episode[0], episode[1], episode[2])):
-                    command = "transmission-gtk \"" + item["magneturi"]
+                    command = client + " \"" + item["magneturi"]
                     command = command + "&tr=" + item["tracker"] + "\""
                     #print command
                     command = item["magneturi"] + "&tr=" + item["tracker"]
                     #os.system(command)
-                    subprocess.Popen(['transmission-gtk', command])
+                    subprocess.Popen([client, command])
                     db.insertRssEpisode(episode)
                     modified = True
                     ui.addLog("Downloading " + episode[0] + "S" +
