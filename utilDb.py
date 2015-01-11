@@ -217,29 +217,37 @@ class UtilDb():
         return c.execute(
             """SELECT DISTINCT(shows.show), shows.monitored, shows.fetching, shows.cover, shows.hasCover
                FROM episodes INNER JOIN shows ON episodes.show = shows.show
-               WHERE shows.monitored = 1 AND episodes.viewed != 1
+               WHERE shows.monitored = 1 AND episodes.viewed = 0
                ORDER BY shows.show""")
 
-	#Returns a list with all the unseen episodes from the given show
-	#@created ana.castro Issue #2
-    def getShowEpisodes(self, show):
+    # Returns a list with a show episodes, according to config parameters
+    def getShowEpisodes(self, show, hide_viewed=False):
         c = self.getC()
+        whereClause = ""
+        if hide_viewed:
+			whereClause = "episodes.viewed = 0 AND"
         return c.execute(
             """SELECT episodes.*, shows.monitored
                FROM episodes INNER JOIN shows ON episodes.show = shows.show
-               WHERE viewed != 1
-			   AND shows.show = ? ORDER BY episodes.show""", (show,))
+               WHERE """ + whereClause +
+			   " shows.show = ? ORDER BY episodes.show", (show,))
 
     # Returns a list of monitored shows,
     # the number of seasons with unseen episodes
     # and the number of unseen episodes
-    def getShowSeasonsCount(self):
+    def getShowSeasonsCount(self, hide_unmonitored, hide_viewed):
         c = self.getC()
+        whereClause = ""
+        if hide_unmonitored and hide_viewed:
+            whereClause = "WHERE shows.monitored = 1 AND episodes.viewed = 0"
+        elif hide_unmonitored:
+            whereClause = "WHERE shows.monitored = 1"
+        elif hide_viewed:
+            whereClause = "WHERE episodes.viewed = 0"
         return c.execute(
             """SELECT episodes.show,
                COUNT(distinct episodes.season) AS seasons,
                COUNT(episodes.season) AS episodes
                FROM episodes INNER JOIN shows ON episodes.show = shows.show
-               WHERE shows.monitored = 1 AND episodes.viewed != 1
-               GROUP BY episodes.show""")
+               """ + whereClause + " GROUP BY episodes.show")
 

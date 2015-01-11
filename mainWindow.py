@@ -8,6 +8,7 @@ import os
 import threading
 import rssParser
 from utilDb import UtilDb
+from showEpisodesPanel import ShowEpisodesPanel
 import utilWeb
 import ctypes
 
@@ -16,8 +17,11 @@ class MainWindow(wx.Frame):
     episodes = []
     shows = []
     showCovers = []
+    showParams = []
 
     notebook = None
+    
+    flagTreeSeasons = False
 
     # Our new improved callback.  The data passed to this method
     # is printed to stdout.
@@ -241,7 +245,9 @@ class MainWindow(wx.Frame):
 
     #@modified ana.castro Issue #2
     def addButton(self, episode):
-        return self.addEpisodePanel(episode, self.listPanel, self.box1)
+        # TODO: testing ShowEpisodesPanel, this will be deprecated...
+        if not self.flagTreeSeasons:
+            return self.addEpisodePanel(episode, self.listPanel, self.box1)
 
     #@modified ana.castro Issue #2
     def addEpisodePanel(self, episode, parentPanel, parentSizer):
@@ -284,6 +290,7 @@ class MainWindow(wx.Frame):
             box.hide()
         for box in self.showCovers:
             self.coversBox.remove(box)
+
         self.box1.DeleteWindows()
         self.boxShows.DeleteWindows()
         self.listPanel.Layout()
@@ -291,6 +298,16 @@ class MainWindow(wx.Frame):
         self.shows = []
         self.showCovers = []
         self.tX = self.tY = 0
+
+        if not self.flagTreeSeasons:
+		    return
+        self.showParams = []
+        self.showParams = UtilDb().getShowSeasonsCount(
+            self.isConf("hide_unmonitored", "ON"), self.isConf("hide_viewed", "ON"))
+        for param in self.showParams:
+            showbox = ShowEpisodesPanel(self, self.listPanel, self.box1, param)
+            showbox.addEpisodes(UtilDb().getShowEpisodes(param["show"], self.isConf("hide_viewed", "ON")))
+            self.box1.Add(showbox)
 
     # show button right click callback: displays context menu
     def cb_showButtonRClick(self, widget, event):
@@ -458,6 +475,7 @@ class MainWindow(wx.Frame):
     #Returning a panel with two buttons
     #@created ana.castro Issue #2
     def getShowFrame(self, show):
+        #showFrame = ShowEpisodesPanel(self.notebook )
         showFrame = wx.Panel(self.notebook)
         sizer = wx.BoxSizer(wx.VERTICAL)
         showFrame.SetSizer(sizer)

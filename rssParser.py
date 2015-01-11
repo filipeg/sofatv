@@ -119,7 +119,8 @@ def sweepSubDir(ui, db, path, levels):
     if not episode_count and subdirs:
         for subdir in subdirs:
             if not (subdir.startswith("Season ") or
-                subdir.startswith("season ")):
+                subdir.startswith("season ") or
+                subdir.startswith("Series ")):
                 return episode_count
         # Seems we have a show directory with Season subdirectories
         show_name = os.path.basename(os.path.normpath(path))
