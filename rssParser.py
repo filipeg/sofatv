@@ -192,10 +192,13 @@ def loadRSSThread(ui):
     eztv_rss_url = "http://rss.bt-chat.com/?group=3&cat=9"
     #eztv_rss_url = "http://rss.bt-chat.com/?group=2&cat=9" # VTV
     #eztv_rss_url = "http://feeds.feedburner.com/eztv-rss-atom-feeds?format=xml"
-    loadRSSFeed(db, eztv_rss_url, ui)
+    #loadRSSFeed(db, eztv_rss_url, ui)
 
     eztv_rss_url = "http://rss.bt-chat.com/?group=2&cat=9"  # VTV
-    loadRSSFeed(db, eztv_rss_url, ui)
+    #loadRSSFeed(db, eztv_rss_url, ui)
+
+    eztv_rss_url = "http://showrss.info/feeds/all.rss"  # showrss v2
+    loadRSSFeed2(db, eztv_rss_url, ui)
 
     db.closeConn()
 
