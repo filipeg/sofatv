@@ -237,3 +237,40 @@ def loadRSSFeed(db, feedUrl, ui):
         db.commit()
     if not loaded:
         ui.addLog("Failed to load feed")
+
+# Called by loadRSS(), loads an URL
+def loadRSSFeed2(db, feedUrl, ui):
+    if ui.getConf("btorrent_client_path"):
+        client = ui.getConf("btorrent_client_path")
+    else:
+        return
+    loaded = modified = False
+    ui.addLog("** Loading RSS feed: " + feedUrl)
+    feed = feedparser.parse(feedUrl)
+    c = db.getC()
+
+    for item in feed.entries:
+        loaded = True
+        # TODO: search showrss:rawtitle tag
+        title = item.items()[0][1].encode('ascii', 'ignore')
+        try:
+            episode = episodeparser.parse_filename(title)
+            if (db.showInList(c, episode[0])):
+                if (db.shouldDownload(c, episode[0], episode[1], episode[2])):
+                    command = item.link
+                    subprocess.Popen([client, command])
+                    db.insertRssEpisode(episode)
+                    modified = True
+                    ui.addLog("Downloading " + episode[0] + "S" +
+                        str(episode[1]) + "E" + str(episode[2]))
+                else:
+                    ui.addLog("Already have " + episode[0] + "S" +
+                        str(episode[1]) + "E" + str(episode[2]))
+        except NameError:
+            pass
+    if modified:
+        db.commit()
+    if not loaded:
+        ui.addLog("Failed to load feed")
+    else:
+        ui.addLog("** Done")
