@@ -509,7 +509,8 @@ class MainWindow(wx.Frame):
 
     def addShowInfo(self, button, text):
         #gtk.idle_add(button.set_tooltip_text, text)
-        wx.CallAfter(button.SetToolTip, wx.ToolTip(text))
+        #wx.CallAfter(button.SetToolTip, wx.ToolTip(text))
+        button.SetToolTip(wx.ToolTip(text))
 
 
 def main():
