@@ -20,7 +20,7 @@ class MainWindow(wx.Frame):
     showParams = []
 
     notebook = None
-    
+
     flagTreeSeasons = False
 
     # Our new improved callback.  The data passed to this method
@@ -71,7 +71,7 @@ class MainWindow(wx.Frame):
             self.setConfs(UtilDb().getConfs())
             self.addLog("* BitTorrent client path updated")
         else:
-           event.Skip() 
+           event.Skip()
 
     def callbackEpisode(self, widget, data=None):
         widget.SetValue((True, False)[widget.GetValue()])
@@ -226,17 +226,17 @@ class MainWindow(wx.Frame):
         #label = gtk.Label("Config")
         self.notebook.AddPage(self.getConfigFrame(), "Config")
         #self.notebook.Show()
-		
-		#@modified ana.castro Issue #2
-		#Getting the shows being monitored and which have unsee episodes;
-		# creating a new tab for each of the shows
-		#Defining the tab's content:
-		# it consists on all the unseen episodes and the options to see it and set it as already seen
+
+        #@modified ana.castro Issue #2
+        #Getting the shows being monitored and which have unsee episodes;
+        # creating a new tab for each of the shows
+        #Defining the tab's content:
+        # it consists on all the unseen episodes and the options to see it and set it as already seen
         if self.isConf("display_show_frame", "ON"):
             shows = UtilDb().getMonitoredShowsWithUnseenEpisodes()
             for show in shows:
-		        self.notebook.AddPage(self.getShowFrame(show["show"]), show["show"])		
-		
+                self.notebook.AddPage(self.getShowFrame(show["show"]), show["show"])
+
         self.Layout()
         self.Show()
 
@@ -300,7 +300,7 @@ class MainWindow(wx.Frame):
         self.tX = self.tY = 0
 
         if not self.flagTreeSeasons:
-		    return
+            return
         self.showParams = []
         self.showParams = UtilDb().getShowSeasonsCount(
             self.isConf("hide_unmonitored", "ON"), self.isConf("hide_viewed", "ON"))
@@ -479,7 +479,7 @@ class MainWindow(wx.Frame):
         showFrame = wx.Panel(self.notebook)
         sizer = wx.BoxSizer(wx.VERTICAL)
         showFrame.SetSizer(sizer)
-		
+
         episodes = UtilDb().getShowEpisodes(show)
         for episode in episodes:
             self.addEpisodePanel(episode, showFrame, sizer)
